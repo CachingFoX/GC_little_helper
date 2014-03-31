@@ -1,4 +1,4 @@
-// ==UserScript==
+﻿// ==UserScript==
 // @name           GC little helper
 // @namespace      http://www.amshove.net
 // @version        10.8
@@ -398,6 +398,7 @@ settings_homezone_color = getValue("settings_homezone_color","#0000FF");
 settings_homezone_opacity = getValue("settings_homezone_opacity",10);
 // Settings: Hill Shadow
 settings_show_hillshadow = getValue("settings_show_hillshadow",false);
+settings_show_contours = getValue("settings_show_contours",false);
 settings_map_layers = getValue("settings_map_layers","").split("###");
 // Settings: default Map
 map_url = "http://www.geocaching.com/map/default.aspx";
@@ -2671,6 +2672,7 @@ all_map_layers["Google Maps Hybrid"] = {tileUrl:"http://mt0.google.com/vt/lyrs=s
 var map_overlays = new Object();
 map_overlays["Hillshadow"] = {tileUrl:"http://toolserver.org/~cmarqu/hill/{z}/{x}/{y}.png",attribution:'hillshadow \u00a9 <a href="http://toolserver.org/" target=\'_blank\'>toolserver.org</a>',tileSize:256,minZoom:0,maxZoom:17};
 map_overlays["Public Transport Lines"] = {tileUrl:"http://openptmap.org/tiles/{z}/{x}/{y}.png",attribution:'Public Transport Lines\u00a9 <a href="http://openptmap.org/" target=\'_blank\'>OpenPTMap</a>',tileSize:256,minZoom:0,maxZoom:17};
+map_overlays["Contours"] = {tileUrl:"http://openmapsurfer.uni-hd.de/tiles/asterc/x={x}&y={y}&z={z}",attribution:'Contours &copy; <a href="http://giscience.uni-hd.de/" target=\'_blank\'>GIScience Heidelberg</a>',tileSize:256,minZoom:13,maxZoom:17};
 
 // Add additional Layers to Map & Select Default-Layer, add Hill-Shadow, add Homezone
 try{
@@ -2683,10 +2685,10 @@ try{
     }
 
     function addLayer(){  
-        injectPageScriptFunction(function(map_layers, map_overlays,  settings_map_default_layer, settings_show_hillshadow){
-            window["GCLittleHelper_MapLayerHelper"] = function(map_layers, map_overlays, settings_map_default_layer, settings_show_hillshadow){
+        injectPageScriptFunction(function(map_layers, map_overlays,  settings_map_default_layer, settings_show_hillshadow,settings_show_contours){
+            window["GCLittleHelper_MapLayerHelper"] = function(map_layers, map_overlays, settings_map_default_layer, settings_show_hillshadow,settings_show_contours){
                 if(!window.MapSettings.Map){
-                            setTimeout(function(){ window["GCLittleHelper_MapLayerHelper"](map_layers, map_overlays, settings_map_default_layer, settings_show_hillshadow)}, 10);
+                            setTimeout(function(){ window["GCLittleHelper_MapLayerHelper"](map_layers, map_overlays, settings_map_default_layer, settings_show_hillshadow,settings_show_contours)}, 10);
                 }
                 else{
                     var layerControl = new window.L.Control.Layers();
@@ -2722,14 +2724,16 @@ try{
                     }
                     window.MapSettings.Map.addLayer(defaultLayer);
                     if(settings_show_hillshadow){
-                      $(".leaflet-control-layers-overlays").find("input").first().click();
+                      $(".leaflet-control-layers-overlays").find("input")[0].click();
                     }
-                    
+                    if(settings_show_contours){
+                      $(".leaflet-control-layers-overlays").find("input")[2].click();
+                    }                    
                 }
             };
                 
-            window["GCLittleHelper_MapLayerHelper"](map_layers, map_overlays, settings_map_default_layer, settings_show_hillshadow);
-        }, "("+JSON.stringify(map_layers)+","+JSON.stringify(map_overlays)+",'"+settings_map_default_layer+"',"+settings_show_hillshadow+")");
+            window["GCLittleHelper_MapLayerHelper"](map_layers, map_overlays, settings_map_default_layer, settings_show_hillshadow,settings_show_contours);
+        }, "("+JSON.stringify(map_layers)+","+JSON.stringify(map_overlays)+",'"+settings_map_default_layer+"','"+settings_show_hillshadow+"','"+settings_show_contours+"')");
     }
     if(settings_use_gclh_layercontrol) setTimeout(addLayer,1000); // 1 Sekunde warten, um Layercontrol von GC Map Enhancements zu ueberschreiben
     
@@ -5447,6 +5451,7 @@ function gclh_showConfig(){
     }
     html += "</select>"+show_help("Here you can select the map source you want to use as default in the map. Option 'Replace Layercontrol by GClh' must be enabled.") +"<br>";
     html += checkbox('settings_show_hillshadow', 'Show Hillshadow by Default') + show_help("If you want 3D-like-Shadow to be displayed by default, activate this function. Option 'Replace Layercontrol by GClh' must be enabled.") + "<br/>";
+    html += checkbox('settings_show_contours', 'Show Contours by Default') + show_help("If you want hill contours to be displayed by default, activate this function. Option 'Replace Layercontrol by GClh' must be enabled.") + "<br/>";
     html += checkbox('settings_use_gclh_layercontrol', 'Replace Layercontrol by GClh') + show_help("If you use other scripts like 'Geocaching Map Enhancements' GClh will overwrite its layercontrol. With this option you can disable GClh layers to use the layers from gc.com or GME.") + "<br/>";
     html += checkbox('settings_map_hide_sidebar', 'Hide sidebar by default') + show_help("If you want to hide the sidebar on the map, just select this option.") + "<br/>";
     html += checkbox('settings_hide_map_header', 'Hide Header by default') + show_help("If you want to hide the header of the map, just select this option.") + "<br/>";
@@ -5870,6 +5875,7 @@ function gclh_showConfig(){
 //      'settings_dynamic_map',
       'settings_show_homezone',
       'settings_show_hillshadow',
+      'settings_show_contours',
 //      'settings_old_map',
       'remove_navi_learn',
       'remove_navi_partnering',
